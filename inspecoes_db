@@ -1,0 +1,7 @@
+name = "api-inspecao"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+kv_namespaces = [
+  { binding = "INSPECOES_DB", id = "e61080840b7b43b0bed00bbec962d3cf" }
+]
