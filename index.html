@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inspeção Veicular FOB & Integração</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+    .card { background: white; padding: 25px; border-radius: 8px; max-width: 600px; margin: 0 auto 20px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .hidden { display: none; }
+    h2, h3 { color: #004085; margin-top: 0; }
+    label { font-weight: bold; margin-top: 10px; display: block; }
+    input[type="text"], select { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    .btn { background: #004085; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+    .btn-sec { background: #28a745; margin-top: 10px; }
+    .btn:hover { opacity: 0.9; }
+    .item-check { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 8px 0; }
+    .item-check select { width: auto; margin: 0; }
+    .token-box { background: #e9ecef; border: 2px dashed #004085; padding: 20px; text-align: center; border-radius: 6px; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+<!-- ETAPA 1: BUSCA CPF -->
+<div class="card" id="step-cpf">
+  <h2>Acesso do Motorista</h2>
+  <label>Informe seu CPF (somente números):</label>
+  <input type="text" id="input-cpf" placeholder="00000000000" maxlength="11">
+  <button class="btn" onclick="verificarAcesso()">Continuar</button>
+</div>
+
+<!-- ETAPA 2: INTEGRACAO & TERMOS (1º Acesso) -->
+<div class="card hidden" id="step-integracao">
+  <h2>1º Acesso: Integração & Treinamento</h2>
+  <p><strong>Resumo das Regras de S&S (Anexo 07) e PPAE:</strong></p>
+  <ul>
+    <li>É proibido trabalhar sob efeito de álcool/drogas e proibido o uso de celular ao dirigir[cite: 2].</li>
+    <li>Proibido subir na carroceria do veículo e obrigatório uso de EPIs completos[cite: 2].</li>
+    <li>Obrigatoriedade do uso de calço de roda na tração do veículo ao estacionar[cite: 2, 3].</li>
+  </ul>
+
+  <h3>Prova de Conhecimento</h3>
+  <form id="form-prova">
+    <p><strong>1. Qual deve ser o material do calço de roda ao estacionar o caminhão?</strong>[cite: 5]</p>
+    <input type="radio" name="q1" value="Borracha"> Borracha<br>
+    <input type="radio" name="q1" value="Madeira"> Madeira<br>
+
+    <p><strong>2. Em qual dia da semana é realizada a inspeção veicular?</strong>[cite: 5]</p>
+    <input type="radio" name="q2" value="Segunda-Feira"> Segunda-Feira<br>
+    <input type="radio" name="q2" value="Todos os dias"> Todos os dias<br>
+
+    <p><strong>3. Onde deve ficar a chave do veículo durante o enlonamento/desenlonamento?</strong>[cite: 5]</p>
+    <input type="radio" name="q3" value="Com o motorista"> Com o motorista<br>
+    <input type="radio" name="q3" value="Bloqueada pelo responsável CSN Cimentos"> Bloqueada pelo responsável CSN Cimentos<br><br>
+
+    <button type="button" class="btn" onclick="concluirIntegracao()">Concluir Prova e Avançar</button>
+  </form>
+</div>
+
+<!-- ETAPA 3: FORMULÁRIO DE INSPEÇÃO (Anexo 02) -->
+<div class="card hidden" id="step-inspecao">
+  <h2>Formulário de Inspeção Veicular FOB</h2>[cite: 1]
+  <form id="form-inspecao">
+    <label>Nome Completo:</label>
+    <input type="text" id="nome" required>
+
+    <label>CNH:</label>
+    <input type="text" id="cnh" required>
+
+    <label>Placa do Veículo (Cavalo/Carreta):</label>
+    <input type="text" id="placa" required>
+
+    <label>Nº do Pedido:</label>
+    <input type="text" id="pedido" required>
+
+    <label>Quantidade de Eixos:</label>
+    <input type="text" id="eixos" required>
+
+    <h3>Itens de Inspeção</h3>[cite: 1]
+    <div class="item-check">
+      <span>Pneus (sem bolhas/cortes/careca)[cite: 1]:</span>
+      <select id="pneus"><option value="CONFORME">Conforme</option><option value="NAO_CONFORME">Não Conforme</option></select>
+    </div>
+    <div class="item-check">
+      <span>Carroceria (sem falhas na forração)[cite: 1]:</span>
+      <select id="carroceria"><option value="CONFORME">Conforme</option><option value="NAO_CONFORME">Não Conforme</option></select>
+    </div>
+    <div class="item-check">
+      <span>Cinto de Segurança em bom estado[cite: 1]:</span>
+      <select id="cinto"><option value="CONFORME">Conforme</option><option value="NAO_CONFORME">Não Conforme</option></select>
+    </div>
+    <div class="item-check">
+      <span>Faróis funcionando[cite: 1]:</span>
+      <select id="farois"><option value="CONFORME">Conforme</option><option value="NAO_CONFORME">Não Conforme</option></select>
+    </div>
+    <div class="item-check">
+      <span>Alarme de Ré operando[cite: 1]:</span>
+      <select id="alarme_re"><option value="CONFORME">Conforme</option><option value="NAO_CONFORME">Não Conforme</option></select>
+    </div>
+    <div class="item-check">
+      <span>Vazamentos (Óleo/Água/Combustível)[cite: 1]:</span>
+      <select id="vazamentos"><option value="SEM_VAZAMENTO">Sem Vazamento</option><option value="COM_VAZAMENTO">Com Vazamento</option></select>
+    </div>
+    <div class="item-check">
+      <span>Par de Calços de Roda presente[cite: 1]:</span>
+      <select id="calcos"><option value="CONFORME">Conforme</option><option value="NAO_CONFORME">Não Conforme</option></select>
+    </div>
+
+    <button type="button" class="btn" onclick="gerarJSONeToken()" style="margin-top: 15px;">Finalizar Inspeção</button>
+  </form>
+</div>
+
+<!-- ETAPA 4: GERAR TOKEN E EXPORTAR JSON -->
+<div class="card hidden" id="step-token">
+  <h2>Inspeção Concluída!</h2>
+  <div class="token-box">
+    <span>SEU TOKEN DE LIBERAÇÃO:</span>
+    <h1 id="txt-token" style="color: #004085; font-size: 38px; margin: 10px 0;"></h1>
+    <span id="txt-status-veiculo" style="font-weight: bold; font-size: 18px;"></span>
+  </div>
+  <br>
+  <p>Baixe o comprovante JSON abaixo para salvar na pasta de auditoria da empresa:</p>
+  <button class="btn btn-sec" onclick="downloadJSON()">Baixar Arquivo JSON da Inspeção</button>
+</div>
+
+<script>
+  let motoristaLocal = { cpf: "", primeiroAcesso: false };
+  let payloadFinal = {};
+
+  function verificarAcesso() {
+    const cpf = document.getElementById('input-cpf').value.trim();
+    if (!cpf) return alert("Informe o CPF.");
+
+    motoristaLocal.cpf = cpf;
+    const jaCadastrado = localStorage.getItem('mot_' + cpf);
+
+    document.getElementById('step-cpf').classList.add('hidden');
+
+    if (jaCadastra
+do) {
+      motoristaLocal.primeiroAcesso = false;
+      document.getElementById('step-inspecao').classList.remove('hidden');
+    } else {
+      motoristaLocal.primeiroAcesso = true;
+      document.getElementById('step-integracao').classList.remove('hidden');
+    }
+  }
+
+  function concluirIntegracao() {
+    const form = document.getElementById('form-prova');
+    if (!form.q1.value || !form.q2.value || !form.q3.value) {
+      return alert("Responda todas as perguntas da prova.");
+    }
+
+    // Salva o cadastro no próprio navegador do motorista
+    localStorage.setItem('mot_' + motoristaLocal.cpf, JSON.stringify({
+      cpf: motoristaLocal.cpf,
+      dataIntegracao: new Date().toISOString()
+    }));
+
+    document.getElementById('step-integracao').classList.add('hidden');
+    document.getElementById('step-inspecao').classList.remove('hidden');
+  }
+
+  function gerarJSONeToken() {
+    const nome = document.getElementById('nome').value.trim();
+    const cnh = document.getElementById('cnh').value.trim();
+    const placa = document.getElementById('placa').value.trim();
+    const pedido = document.getElementById('pedido').value.trim();
+
+    if (!nome || !cnh || !placa || !pedido) {
+      return alert("Preencha todos os campos obrigatórios.");
+    }
+
+    const token = "CHK-" + Math.floor(100000 + Math.random() * 900000);
+    const pneus = document.getElementById('pneus').value;
+    const cinto = document.getElementById('cinto').value;
+    const calcos = document.getElementById('calcos').value;
+    const vazamentos = document.getElementById('vazamentos').value;
+
+    const aprovado = (pneus === 'CONFORME' && cinto === 'CONFORME' && calcos === 'CONFORME' && vazamentos === 'SEM_VAZAMENTO');
+
+    payloadFinal = {
+      token: token,
+      dataHora: new Date().toLocaleString("pt-BR"),
+      motorista: {
+        nome: nome,
+        cpf: motoristaLocal.cpf,
+        cnh: cnh,
+        primeiroAcesso: motoristaLocal.primeiroAcesso
+      },
+      veiculo: {
+        placa: placa,
+        pedido: pedido,
+        eixos: document.getElementById('eixos').value,
+        statusGeral: aprovado ? "LIBERADO" : "BLOQUEADO - ITEM NAO CONFORME",
+        itensChecklist: {
+          pneus: pneus,
+          carroceria: document.getElementById('carroceria').value,
+          cintoSeguranca: cinto,
+          farois: document.getElementById('farois').value,
+          alarmeRe: document.getElementById('alarme_re').value,
+          vazamentos: vazamentos,
+          calcosRoda: calcos
+        }
+      }
+    };
+
+    document.getElementById('step-inspecao').classList.add('hidden');
+    document.getElementById('step-token').classList.remove('hidden');
+
+    document.getElementById('txt-token').innerText = token;
+    const elStatus = document.getElementById('txt-status-veiculo');
+    elStatus.innerText = payloadFinal.veiculo.statusGeral;
+    elStatus.style.color = aprovado ? "green" : "red";
+  }
+
+  function downloadJSON() {
+    const jsonStr = JSON.stringify(payloadFinal, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${payloadFinal.token}_${payloadFinal.veiculo.placa}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
